@@ -1,4 +1,4 @@
-# MNIST Semantic Segmentation and Obkect Detection
+# MNIST Semantic Segmentation and Object Detection
 
 PyTorchを使ったシンプルなセマンティックセグメンテーションと物体検出のコードです。
 
@@ -16,7 +16,7 @@ torch >= 1.10.1
 torchvision >= 0.11.2
 ```
 
-## Semantic Segmentation
+## セマンティックセグメンテーション
 
 ### 推論例
 
@@ -40,7 +40,7 @@ python inference_segmentation.py
 mnist_segmentation.ipynb
 ```
 
-## Object Detection
+## 物体検出
 
 ### 推論例
 
