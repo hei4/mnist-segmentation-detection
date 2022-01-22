@@ -11,6 +11,8 @@ PyTorchを使ったシンプルなセマンティックセグメンテーショ�
 </tr>
 </table>
 
+![](title_a.png)![](title_b.png)
+
 ## requirements
 
 ```
