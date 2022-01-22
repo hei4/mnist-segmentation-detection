@@ -2,17 +2,9 @@
 
 PyTorchを使ったシンプルなセマンティックセグメンテーションと物体検出のコードです。
 
-データセットはMNISTを加工して使用します。
-
-<table border="0">
-<tr>
-<td><img src="title_a.png"></td>
-<td><img src="title_b.png"></td>
-</tr>
-</table>
+学習するデータセットはMNISTを加工して使用します。
 
 <img src="title_a.png" width="400px"> <img src="title_b.png" width="400px">
-
 
 ## requirements
 
