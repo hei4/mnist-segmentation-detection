@@ -4,7 +4,13 @@ PyTorchを使ったシンプルなセマンティックセグメンテーショ�
 
 データセットはMNISTを加工して使用します。
 
-![](title_a.png)![](title_b.png)
+<table border="0">
+<tr>
+<td><img src="title_a.png"></td>
+<td><img src="title_b.png"></td>
+</tr>
+</table>
+
 
 ## requirements
 
