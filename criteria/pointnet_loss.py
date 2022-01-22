@@ -25,7 +25,7 @@ class PointNetLoss(Module):
         Args:
             lambda_offset (float, optional): オフセット損失の重み. Defaults to 1..
             lambda_size (float, optional): サイズ損失の重み. Defaults to 0.1.
-            use_pr_focal_loss (bool, optional): PointNet論文から実装した損失. Defaults to False.
+            use_pr_focal_loss (bool, optional): Penalty Reduced Focal Lossを使うか. Defaults to False.
             alpha (float, optional): Penalty Reduced Focal Lossのハイパーパラメータ. Defaults to 2..
             beta (float, optional): Penalty Reduced Focal Lossのハイパーパラメータ. Defaults to 4..
         """

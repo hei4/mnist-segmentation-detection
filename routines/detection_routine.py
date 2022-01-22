@@ -1,5 +1,8 @@
+from ast import Call
+from typing import Callable
 import numpy as np
 import torch
+from torch import Tensor
 from torch import optim
 from torch.utils.data import DataLoader
 
@@ -26,7 +29,7 @@ def run_detection(mode: str,
         loader (DataLoader): データローダー
         device (torch.device): GPU or CPU
         net (SimplePointNet): ネットワーク
-        criterion (nn.Module): 損失関数
+        criterion (PointNetLoss): 損失関数
         metric (BboxScoring): 評価関数
         optimizer (optim.Optimizer, optional): オプティマイザー。訓練のみ指定. Defaults to None.
     """
