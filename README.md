@@ -11,22 +11,21 @@ PyTorchを使ったシンプルなセマンティックセグメンテーショ�
 </tr>
 </table>
 
-
 ## requirements
 
 ```
-albumentations         1.1.0 
-jupyter                1.0.0
-matplotlib             3.5.1
-notebook               6.4.6
-numpy                  1.22.0
-Pillow                 9.0.0
-scikit-image           0.19.1
-torch                  1.10.1
-torchvision            0.11.2
+albumentations >= 1.1.0 
+jupyter >= 1.0.0
+matplotlib >= 3.5.1
+torch >= 1.10.1
+torchvision >= 0.11.2
 ```
 
 ## Semantic Segmentation
+
+### 推論例
+
+![](results/mnist_segmentation/test.png)
 
 ### 学習
 
@@ -47,6 +46,10 @@ mnist_segmentation.ipynb
 ```
 
 ## Object Detection
+
+### 推論例
+
+![](results/mnist_detection/test.png)
 
 ### 学習
 
