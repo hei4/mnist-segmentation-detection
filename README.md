@@ -11,7 +11,7 @@ PyTorchを使ったシンプルなセマンティックセグメンテーショ�
 </tr>
 </table>
 
-<img src="title_a.png" width="200px"> <img src="title_b.png" width="200px">
+<img src="title_a.png" width="400px"> <img src="title_b.png" width="400px">
 
 
 ## requirements
