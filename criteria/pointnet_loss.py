@@ -5,15 +5,13 @@ from torch.nn import Module
 from torch.nn import functional as F
 
 
-class PointNetLoss(Module):
+class PointNetLoss:
     """PointNet用の損失関数クラス
 
     キーポイント損失、サイズ損失、オフセット損失で構成される。
-    キーポイント損失は、バイナリ交差損失とPointNet論文から実装した損失から選択できる
-
-    Args:
-        Module (Module): torch.nn.Module
+    キーポイント損失は、バイナリ交差損失とPointNet論文から実装したPenalty Reduced Focal Lossから選択できる
     """
+    
     def __init__(self,
                  lambda_offset: float =1.,
                  lambda_size: float =0.1,
@@ -30,8 +28,6 @@ class PointNetLoss(Module):
             beta (float, optional): Penalty Reduced Focal Lossのハイパーパラメータ. Defaults to 4..
         """
         
-        super().__init__()
-        
         self.lambda_offset = lambda_offset
         self.lambda_size = lambda_size
 
@@ -43,7 +39,7 @@ class PointNetLoss(Module):
         self.alpha = alpha
         self.beta = beta
     
-    def forward(self,
+    def __call__(self,
                 predicted_keypoints: Tensor,
                 predicted_offsets: Tensor,
                 predicted_sizes: Tensor,
