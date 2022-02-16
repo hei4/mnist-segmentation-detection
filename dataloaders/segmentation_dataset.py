@@ -21,7 +21,7 @@ class SegmentationMNIST(Dataset):
                  transform: BaseCompose =None,
                  fashion: bool =False,
                  **kwargs) -> None:
-        """[summary]
+        """
 
         Args:
             root (str): MNISTのルートディレクトリ

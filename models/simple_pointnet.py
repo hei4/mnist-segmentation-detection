@@ -13,7 +13,7 @@ class SimplePointNet(Module):
     """
 
     def __init__(self, in_channels: int =1, num_classes: int =10) -> None:
-        """初期化メソッド
+        """
 
         Args:
             in_channels (int, optional): 入力チャネル数. Defaults to 1.

@@ -8,7 +8,7 @@ class BboxScoring:
     """物体検出のTP・FP・FNを評価するクラス
     """
     def __init__(self, iou_threshold: float =0.75) -> None:
-        """初期化メソッド
+        """
 
         Args:
             iou_threshold (float, optional): 判定のIoU閾値. Defaults to 0.75.
@@ -34,34 +34,41 @@ class BboxScoring:
         if N == 0 or M == 0:
             image_tp = 0    # 推論ボックスと正解ボックスのいずれかがないなら、真陽性はない
         else:
-            iou_matrix = box_iou(predicted_bboxes, target_bboxes)   # IoUマトリックス。Tensor形状は[N, M]
+            # IoUマトリックス。Tensor形状は[N, M]
+            iou_matrix = box_iou(predicted_bboxes, target_bboxes)   
 
-            sort_indices = iou_matrix.max(dim=1)[0].argsort(descending=True)    # IoU降順のインデックス
+            # 推論ボックスをIoU降順にするインデックス
+            sort_indices = iou_matrix.max(dim=1)[0].argsort(descending=True)    
+            
             iou_matrix = iou_matrix[sort_indices]   # 降順にIoUマトリックスをソート
 
-            # 対応した箇所がTrueになるGTと推論の対応表を作成する。Tensor形状は[N, M]
+            # 対応した箇所がTrueになる推論と正解ボックスの対応表。Tensor形状は[N, M]
             correspondence = torch.zeros_like(iou_matrix, dtype=torch.long)     
 
-            # 未割り当ての正解ボックスがTrueになる配列を作成する。Tensor形状は[M]
+            # 推論ボックスに紐づけられていない正解ボックスがTrueの配列。Tensor形状は[M]
             unassigned_mask = torch.ones(M, dtype=torch.bool) 
             
-            # 閾値を超えた箇所がTrueになる対応表を作成する。Tensor形状は[N, M]
+            # IoUが閾値を超えたボックス組み合わせがTrueになる対応表。Tensor形状は[N, M]
             thresholded_mask = iou_matrix > self.iou_threshold
 
-            for n in range(N):  # ソートしたIoUマトリックスを行ごとに順に処理する
-                # 未割り当て、かつ、閾値を超えた箇所がTrueの配列。Tensor形状は[M]
+            # ソートしたIoUマトリックスを行ごと（＝推論ボックスごと）に順に処理する
+            for n in range(N):  
+                # まだ推論ボックスに紐づいておらず、かつ、n番目の推論ボックスとのIoUが
+                # 閾値を超えた箇所正解ボックスがTrueの配列。Tensor形状は[M]
                 enabled_mask = torch.logical_and(unassigned_mask, thresholded_mask[n])
 
                 if enabled_mask.any() == False:
-                    continue    # 未割り当て、かつ、閾値を超えた箇所がない行はスキップ
-
-                enabled_iou = enabled_mask * iou_matrix[n]
-                m = torch.argmax(enabled_iou)   # 未割り当て、かつ、閾値を超えた中でIoUが最大の正解ボックス
+                    continue    # 正解ボックスが一つも該当しない場合はスキップ
                 
-                # 対応表に割り当てる
+                # 推論ボックスに紐づいていない正解ボックスの中で、
+                # n番目の推論ボックスとのIoUが最大の正解ボックスのインデックスmを得る
+                enabled_iou = enabled_mask * iou_matrix[n]
+                m = torch.argmax(enabled_iou)   
+                
+                # 対応表のn行m列に割り当てる
                 correspondence[n, m] = 1
 
-                # 使用した正解ボックスをunassiginedから除去する
+                # 該当した正解ボックスを紐づけ完了とする
                 unassigned_mask[m] = False
 
             image_tp = correspondence.sum().item()  # 対応表のTrueの個数が真陽性に等しい
@@ -91,26 +98,34 @@ class BboxScoring:
         minibatch_fp = 0    # ミニバッチのFPの個数
         minibatch_fn = 0    # ミニバッチのFNの個数
         
-        for predicted_bboxes, predicted_labels, target_bboxes, target_labels in zip(predicted_bboxes_list, predicted_labels_list, target_bboxes_list, target_labels_list):
-            # ユニークなラベルの配列を作る
+        for predicted_bboxes, \
+            predicted_labels, \
+            target_bboxes, \
+            target_labels in zip(predicted_bboxes_list,
+                                 predicted_labels_list,
+                                 target_bboxes_list,
+                                 target_labels_list):
+
+            # 1枚の画像に対する推論と正解ボックスでユニークなラベルのTensorを作る
             if len(predicted_labels) == 0:
                 unique_labels = target_labels.unique()
             else:
                 unique_labels = torch.cat([predicted_labels, target_labels]).unique()
 
             for unique_label in unique_labels:
-                # ユニークラベルな推論ボックス
+                # 推論ボックスの中でユニークラベルの一つに該当するもの
                 if len(predicted_labels) == 0:
                     p_bboxes = []
                 else:
                     p_bboxes = predicted_bboxes[predicted_labels == unique_label]
     
-                # ユニークラベルな正解ボックス
+                # 正解ボックスの中でユニークラベルの一つに該当するもの
                 t_bboxes = target_bboxes[target_labels == unique_label]
 
                 # 画像の真陽性、偽陽性、偽陰性
                 image_tp, image_fp, image_fn = self._classify_bboxes(p_bboxes, t_bboxes)
 
+                # ミニバッチの真陽性、偽陽性、偽陰性に加算する
                 minibatch_tp += image_tp
                 minibatch_fp += image_fp
                 minibatch_fn += image_fn

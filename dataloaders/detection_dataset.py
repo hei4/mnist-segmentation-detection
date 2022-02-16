@@ -23,7 +23,7 @@ class DetectionMNIST(Dataset):
                  transform: BaseCompose =None,
                  fashion: bool =False,
                  **kwargs) -> None:
-        """初期化メソッド
+        """
 
         Args:
             root (str): MNISTのルートディレクトリ
@@ -120,20 +120,23 @@ class DetectionMNIST(Dataset):
             オフセットマップのTensor形状は[2, 7, 7]
             サイズマップのTensor形状は[2, 7, 7]
         """
-        keypoint = torch.zeros([10, 7, 7], dtype=torch.float32)
-        offset = torch.zeros([2, 7, 7], dtype=torch.float32)
-        size = torch.zeros([2, 7, 7], dtype=torch.float32)
+        keypoint = torch.zeros([10, 7, 7], dtype=torch.float32)     # 1/4縮小のマップ
+        offset = torch.zeros([2, 7, 7], dtype=torch.float32)        # xとyで2チャネル
+        size = torch.zeros([2, 7, 7], dtype=torch.float32)          # 高さと幅で2チャネル
 
-        # MNISTではループは1回しか実行されないが、バウンディングボックスが複数あればループでマップに加算する
+        # バウンディングボックスが複数あれば以下のループでボックス個数だけマップに加算する
+        # 当然、MNISTでは以下のループは1回しか実行されないので注意
         for bbox, label in zip(bboxes, labels):
             x_center = (bbox[0] + bbox[2]) / 2.
             y_center = (bbox[1] + bbox[3]) / 2.
-            W_index = int(x_center / 4.)
-            H_index = int(y_center / 4.)
+            W_index = int(x_center / 4.)    # x中心に対応するインデックス
+            H_index = int(y_center / 4.)    # y中心に対応するインデックス
 
+            # 中心位置が1のガウシアンをキーポイントマップに加算する
             keypoint[label] += torch.exp(-((self.grid_x - W_index) **
                                          2 + (self.grid_y - H_index)**2) / (2 * self.sigma**2))
 
+            # オフセットの設定。キーポイントマップでのピクセル中心は元画像の2ピクセルずれた位置
             offset[0, H_index, W_index] += x_center - \
                 4. * (W_index + 0.5)  # x offset
             offset[1, H_index, W_index] += y_center - \
@@ -142,7 +145,9 @@ class DetectionMNIST(Dataset):
             size[0, H_index, W_index] += bbox[2] - bbox[0]  # width
             size[1, H_index, W_index] += bbox[3] - bbox[1]  # height
 
-        keypoint = torch.clamp(keypoint, min=0., max=1.)    # 複数回の加算を考慮して、上限1下限0にスライス
+        # 複数回の加算を考慮して、上限1下限0にスライスする
+        keypoint = torch.clamp(keypoint, min=0., max=1.)    
+        
         return keypoint, offset, size
 
 

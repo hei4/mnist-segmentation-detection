@@ -11,7 +11,7 @@ class SimpleUNet(Module):
         Module (Module): torch.nn.Module
     """
     def __init__(self, in_channels: int =1, num_classes: int =11) -> None:
-        """初期化メソッド
+        """
 
         Args:
             in_channels (int, optional): 入力チャネル数. Defaults to 1.

@@ -19,19 +19,25 @@ def get_peak_indices(keypoints: Tensor,
         Tuple[Tensor, Tensor, Tensor, Tensor]:
         第0軸インデックス、第1軸インデックス、第2軸インデックス、第3軸インデックス
     """
-    dilation = F.max_pool2d(keypoints, 3, stride=1, padding=1)  # チャネル別の3x3のモルフォロジー膨張
-    spatial_mask = (dilation == keypoints)  # 空間方向で3x3範囲の最大値に等しい位置がTrueのマスク
+    # チャネルごとに3x3範囲のモルフォロジー膨張
+    dilation = F.max_pool2d(keypoints, 3, stride=1, padding=1)  
 
-    channel_max = torch.max(keypoints, dim=1, keepdim=True)[0]     # ピクセル別のモルフォロジー膨張
+    spatial_mask = (dilation == keypoints)  # 3x3範囲の最大値に等しい位置がTrueのマスク
+
+    # ピクセルごとにチャネル方向のモルフォロジー膨張
+    channel_max = torch.max(keypoints, dim=1, keepdim=True)[0]
+
     channel_mask = (channel_max == keypoints)  # チャネル方向で最大値に等しい位置がTrueのマスク
 
-    max_mask = spatial_mask * channel_mask  # 3x3の空間範囲で最大かつ、チャネル方向でも最大がTrue
+    # 3x3の空間範囲で最大かつ、チャネル方向でも最大がTrueのマスク
+    max_mask = spatial_mask * channel_mask  
+    
     peak = max_mask * keypoints # ピーク位置のみkeypointsの値、それ以外は0のピークマップ
 
     # それぞれの画像のk個のピーク位置
     values, indices = torch.topk(peak.flatten(start_dim=1), k=k, dim=1)
 
-    # 画像ごとのk個のピークに対する第1軸、第2軸、第3軸のインデックス
+    # それぞれの画像のk個のピークに対する、第1軸、第2軸、第3軸のインデックス
     _, C_indices, H_indices, W_indices = np.unravel_index(indices.cpu().numpy(), peak.shape)
     C_indices = torch.tensor(C_indices)
     H_indices = torch.tensor(H_indices)
@@ -44,7 +50,7 @@ def get_peak_indices(keypoints: Tensor,
     H_indices = H_indices.flatten()
     W_indices = W_indices.flatten()
 
-    # 閾値を超えたものだけ採用
+    # キーポイントマップの値が閾値を超えたものだけ採用
     N_indices = N_indices[values > threshold]
     C_indices = C_indices[values > threshold]
     H_indices = H_indices[values > threshold]

@@ -8,7 +8,7 @@ class MaskScoring:
     """セマンティックセグメンテーションのTP・FP・FNを評価するクラス
     """
     def __init__(self, num_classes: int) -> None:
-        """初期化メソッド
+        """
 
         Args:
             num_classes (int): クラス数
@@ -27,10 +27,10 @@ class MaskScoring:
         Returns:
             Tuple[float, float, float]: ミニバッチの真陽性、偽陽性、偽陰性
         """
-        # One-hotエンコーディング
-        target_masks = F.one_hot(target_masks, self.num_classes)   # クラス数の軸は末尾になる [N, H, W, C]
+        # One-hotエンコーディング。クラス数の軸は末尾になる
+        target_masks = F.one_hot(target_masks, self.num_classes)   # [N, H, W, C]
         predicted_masks = F.one_hot(predicted_masks, self.num_classes)
-
+        
         # 前景クラスでチャネルを選択する
         target_masks = target_masks[:, :, :, 1:]  # [N, H, W, C-1]
         predicted_masks = predicted_masks[:, :, :, 1:]

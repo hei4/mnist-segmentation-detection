@@ -1,7 +1,8 @@
+"""CenterNetの公式実装を参考にしています https://github.com/xingyizhou/CenterNet
+"""
 import torch
 from torch import Tensor
 from torch import nn
-from torch.nn import Module
 from torch.nn import functional as F
 
 
@@ -18,7 +19,7 @@ class PointNetLoss:
                  use_pr_focal_loss: bool =False,
                  alpha: float =2.,
                  beta: float=4.) -> None:
-        """初期化メソッド
+        """
 
         Args:
             lambda_offset (float, optional): オフセット損失の重み. Defaults to 1..
@@ -60,11 +61,15 @@ class PointNetLoss:
             Tensor: 損失値。Tensor形状はスカラー
         """
 
+        # キーポイント損失。初期化メソッドで実体を設定している
         loss_keypoint = self.keypoint_loss(predicted_keypoints, target_keypoints)
 
-        peak_mask = target_keypoints == 1.
-        peak_mask = torch.sum(peak_mask, dim=1).to(torch.bool)
-        peak_mask = torch.repeat_interleave(peak_mask.unsqueeze(dim=1), 2, dim=1)
+        # オフセット損失とサイズ損失のためにピークのみTrueのマスクを作成する
+        peak_mask = target_keypoints == 1.  # 1の位置がガウシアン中心のピーク
+        peak_mask = torch.sum(peak_mask, dim=1).to(torch.bool)  # チャネル方向の論理和
+        peak_mask = torch.repeat_interleave(peak_mask.unsqueeze(dim=1),
+                                            2,
+                                            dim=1)  # L1損失のためにチャネル方向に×2
 
         loss_offset = F.l1_loss(predicted_offsets * peak_mask,
                                 target_offsets * peak_mask, reduction='sum')
@@ -72,6 +77,7 @@ class PointNetLoss:
         loss_size = F.l1_loss(predicted_sizes * peak_mask,
                               target_sizes * peak_mask, reduction='sum')
 
+        # ピーク数で除算して平均にする
         num_peak = torch.sum(peak_mask)
         if num_peak > 0:
             loss_keypoint /= num_peak
@@ -93,21 +99,21 @@ class PointNetLoss:
             Tensor: 損失値。Tensor形状はスカラー
         """
 
-        # ターゲットが1になっている箇所のみTrueのマスク
-        peak_mask = torch.where(1.-target_keypoints < 1e-6, True, False)
+        # ピークのみTrueのマスクを作成する
+        peak_mask = target_keypoints == 1.  # 1の位置がガウシアン中心のピーク
 
+        # ピーク位置の損失
         positive = -((1. - predicted_keypoints) ** self.alpha) * \
             torch.log(predicted_keypoints + 1e-6)
-        
-        positive = torch.sum(positive[peak_mask])   # マスクTrueの箇所のみ加算
+        positive = torch.sum(positive[peak_mask])   # マスクがTrueの箇所のみ加算
 
         reverse_mask = torch.logical_not(peak_mask)     # マスク反転
 
+        # ピーク位置以外の損失
         negative = -((1. - target_keypoints) ** self.beta) * \
             (predicted_keypoints ** self.alpha) * \
             torch.log(1. - predicted_keypoints + 1e-6)
-        
-        negative = torch.sum(negative[reverse_mask])    # 反転マスクTrueの箇所のみ加算
+        negative = torch.sum(negative[reverse_mask])    # 反転マスクがTrueの箇所のみ加算
         
         return positive + negative
 
